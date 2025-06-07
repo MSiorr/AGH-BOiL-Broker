@@ -44,10 +44,12 @@ export default function ResponseView({result}: ResponseViewProps) {
                     {result.deltaReadable.map(p => <p>{p}</p>)}
                 </p>
                 <p>
-                    Zysk całkowity = {result.totalProfit} <br/>
                     Koszt transportu = {result.transportCostTotal} <br/>
                     Koszt zakupu = {result.purchaseCostTotal} <br/>
-                    Przychód = {result.revenueTotal} <br/>
+                    Koszt całkowity = {result.purchaseCostTotal + result.transportCostTotal} <br/>
+                    <br/>
+                    Przychód całkowity = {result.revenueTotal} <br/>
+                    Zysk = {result.totalProfit} <br/>
                     <br/>
                     <p className={result.totalProfit == totalProfitCalc ? "text-green-400" : "text-red-600"}>
                         {result.revenueTotal} - ({result.transportCostTotal} + {result.purchaseCostTotal})
@@ -59,8 +61,8 @@ export default function ResponseView({result}: ResponseViewProps) {
             <div className="absolute bottom-0 right-0 p-4 bg-secondary text-lg rounded-xl">
                 <h2>Legenda:</h2>
                 <div className="mt-5 w-100 grid grid-cols-2 grid-rows-2 aspect-[5/2] border font-bold">
-                    <p className="flex grow items-center justify-center">Profit indywidualny</p>
-                    <p className="row-start-2 col-start-2 flex grow items-center justify-center border border-red-400">Optymalny transport</p>
+                    <p className="flex grow items-center justify-center">Zyski jednostkowe</p>
+                    <p className="row-start-2 col-start-2 flex grow items-center justify-center border border-red-400">Optymalne przewozy</p>
                 </div>
             </div>
         </Card>
