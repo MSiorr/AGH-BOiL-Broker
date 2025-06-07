@@ -25,19 +25,19 @@ type LogisticFormProps = {
 
 export default function LogisticsForm({ onSubmit }: LogisticFormProps) {
     const [suppliers, setSuppliers] = useState<Supplier[]>([
-        { id: "D1", supply: "", sellingPrice: "" },
-        { id: "D2", supply: "", sellingPrice: "" },
+        { id: "D1", supply: -1, sellingPrice: -1 },
+        { id: "D2", supply: -1, sellingPrice: -1 },
     ]);
 
     const [customers, setCustomers] = useState<Customer[]>([
-        { id: "O1", demand: "", buyingPrice: "" },
-        { id: "O2", demand: "", buyingPrice: "" },
-        { id: "O3", demand: "", buyingPrice: "" },
+        { id: "O1", demand: -1, buyingPrice: -1 },
+        { id: "O2", demand: -1, buyingPrice: -1 },
+        { id: "O3", demand: -1, buyingPrice: -1 },
     ]);
 
     const [unitCosts, setUnitCosts] = useState<UnitCostsMatrix>({
-        D1: { O1: "", O2: "", O3: "" },
-        D2: { O1: "", O2: "", O3: "" },
+        D1: { O1: -1, O2: -1, O3: -1 },
+        D2: { O1: -1, O2: -1, O3: -1 },
     });
 
     const [selectedCustomer, setSelectedCustomer] = useState<string | null>(
@@ -50,7 +50,7 @@ export default function LogisticsForm({ onSubmit }: LogisticFormProps) {
     const handleSupplierChange = (
         supplierId: string,
         field: keyof Supplier,
-        value: string | number
+        value: number
     ) => {
         setSuppliers((prevSuppliers) =>
             prevSuppliers.map((supplier) =>
@@ -64,7 +64,7 @@ export default function LogisticsForm({ onSubmit }: LogisticFormProps) {
     const handleCustomerChange = (
         customerId: string,
         field: keyof Customer,
-        value: string | number
+        value: number
     ) => {
         setCustomers((prevCustomers) =>
             prevCustomers.map((customer) =>
@@ -77,10 +77,10 @@ export default function LogisticsForm({ onSubmit }: LogisticFormProps) {
 
     const handleAddSupplier = () => {
         setSuppliers((prevSuppliers) => {
-            const newSupplier = {
+            const newSupplier: Supplier = {
                 id: `D${prevSuppliers.length + 1}`,
-                supply: undefined,
-                sellingPrice: undefined,
+                supply: -1,
+                sellingPrice: -1,
             };
             const updatedSuppliers = [...prevSuppliers, newSupplier];
 
@@ -88,7 +88,7 @@ export default function LogisticsForm({ onSubmit }: LogisticFormProps) {
                 const newCosts: UnitCostsMatrix = { ...prevCosts };
                 newCosts[newSupplier.id] = {};
                 customers.forEach((customer) => {
-                    newCosts[newSupplier.id][customer.id] = "";
+                    newCosts[newSupplier.id][customer.id] = -1;
                 });
                 return newCosts;
             });
@@ -99,10 +99,10 @@ export default function LogisticsForm({ onSubmit }: LogisticFormProps) {
 
     const handleAddCustomer = () => {
         setCustomers((prevCustomers) => {
-            const newCustomer = {
+            const newCustomer: Customer = {
                 id: `O${prevCustomers.length + 1}`,
-                demand: undefined,
-                buyingPrice: undefined,
+                demand: -1,
+                buyingPrice: -1,
             };
             const updatedCustomers = [...prevCustomers, newCustomer];
 
@@ -111,7 +111,7 @@ export default function LogisticsForm({ onSubmit }: LogisticFormProps) {
                 suppliers.forEach((supplier) => {
                     newCosts[supplier.id] = {
                         ...prevCosts[supplier.id],
-                        [newCustomer.id]: "",
+                        [newCustomer.id]: -1,
                     };
                 });
                 return newCosts;
@@ -157,26 +157,20 @@ export default function LogisticsForm({ onSubmit }: LogisticFormProps) {
         const isValid =
             suppliers.every((supplier) => {
                 return (
-                    supplier.supply !== undefined &&
-                    supplier.sellingPrice !== undefined &&
-                    !isNaN(Number(supplier.supply)) &&
-                    !isNaN(Number(supplier.sellingPrice))
+                    supplier.supply >= 0 &&
+                    supplier.sellingPrice >= 0
                 );
             }) &&
             customers.every((customer) => {
                 return (
-                    customer.demand !== undefined &&
-                    customer.buyingPrice !== undefined &&
-                    !isNaN(Number(customer.demand)) &&
-                    !isNaN(Number(customer.buyingPrice))
+                    customer.demand >= 0 &&
+                    customer.buyingPrice >= 0
                 );
             }) &&
             Object.values(unitCosts).every((costRow) => {
                 return Object.values(costRow).every((cost) => {
                     return (
-                        cost !== undefined &&
-                        cost !== "" &&
-                        !isNaN(Number(cost))
+                        cost >= 0
                     );
                 });
             });

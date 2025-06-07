@@ -29,14 +29,17 @@ export default function UnitCostRow({
                     <FormInput
                         value={unitCosts[customer.id] ?? ""}
                         onChange={(value) => {
-                            setUnitCosts((prev) => ({
-                                ...prev,
-                                [supplier.id]: {
-                                    ...prev[supplier.id],
-                                    [customer.id]:
-                                        value === "" ? "" : Number(value),
-                                },
-                            }));
+                            setUnitCosts((prev) => {
+                                const result: UnitCostsMatrix = {
+                                    ...prev,
+                                    [supplier.id]: {
+                                        ...prev[supplier.id],
+                                        [customer.id]:
+                                            value === "" ? -1 : Number(value),
+                                    },
+                                };
+                                return result;
+                            });
                         }}
                         validateOn={validateOn}
                         size="large"

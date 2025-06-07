@@ -18,7 +18,7 @@ type LogisticRowProps = {
     handleSupplierChange: (
         id: string,
         field: keyof Supplier,
-        value: number | ""
+        value: number
     ) => void;
     handleAddCustomer: () => void;
     handleDeleteCustomer: () => void;

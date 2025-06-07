@@ -7,7 +7,7 @@ type SupplierHeaderProps = {
     handleSupplierChange: (
         id: string,
         field: "supply" | "sellingPrice",
-        value: number | ""
+        value: number
     ) => void;
     validateOn?: boolean;
 };
@@ -29,7 +29,7 @@ export default function SuppliersHeader({
                             handleSupplierChange(
                                 supplier.id,
                                 "supply",
-                                value === "" ? "" : Number(value)
+                                value
                             )
                         }
                         validateOn={validateOn}
@@ -41,7 +41,7 @@ export default function SuppliersHeader({
                             handleSupplierChange(
                                 supplier.id,
                                 "sellingPrice",
-                                value === "" ? "" : Number(value)
+                                value
                             )
                         }
                         validateOn={validateOn}
