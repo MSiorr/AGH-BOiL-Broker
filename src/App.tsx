@@ -4,22 +4,13 @@ import LogisticsForm from "./components/LogisticForm/logistics-form";
 import { ThemeProvider } from "./components/theme-provider";
 import type { FormData } from "./types";
 import ResponseView from "./components/Response/respone-view";
+import {ZZT, type ZZTResult} from "@/lib/zzt.ts";
 
 function App() {
-    const [formData, setFormData] = useState<FormData | undefined>(undefined);
+    const [result, setResult] = useState<ZZTResult | undefined>(undefined);
 
-    const handleFormSubmit = ({
-        suppliers,
-        customers,
-        unitCosts,
-        clientDemandFulfillment,
-    }: FormData) => {
-        setFormData({
-            suppliers,
-            customers,
-            unitCosts,
-            clientDemandFulfillment,
-        });
+    const handleFormSubmit = (formData: FormData) => {
+        setResult(ZZT(formData));
     };
 
     return (
@@ -27,7 +18,7 @@ function App() {
             <main className="gap-x-2 p-2 min-w-screen min-h-screen flex justify-between">
                 <LogisticsForm onSubmit={handleFormSubmit} />
 
-                {formData && <ResponseView formData={formData} />}
+                {result && <ResponseView result={result} />}
             </main>
         </ThemeProvider>
     );
