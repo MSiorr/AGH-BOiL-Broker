@@ -34,8 +34,7 @@ export default function UnitCostRow({
                                     ...prev,
                                     [supplier.id]: {
                                         ...prev[supplier.id],
-                                        [customer.id]:
-                                            value === "" ? -1 : Number(value),
+                                        [customer.id]: value,
                                     },
                                 };
                                 return result;
