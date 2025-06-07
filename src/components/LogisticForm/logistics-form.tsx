@@ -13,6 +13,7 @@ import {
     SelectValue,
 } from "../ui/select";
 import { Label } from "../ui/label";
+import {testData} from "@/App.tsx";
 
 type LogisticFormProps = {
     onSubmit?: (data: {
@@ -23,21 +24,23 @@ type LogisticFormProps = {
     }) => void;
 };
 
+const defaultValue = (testValue: number) => testData ? testValue : -1;
+
 export default function LogisticsForm({ onSubmit }: LogisticFormProps) {
     const [suppliers, setSuppliers] = useState<Supplier[]>([
-        { id: "D1", supply: -1, sellingPrice: -1 },
-        { id: "D2", supply: -1, sellingPrice: -1 },
+        { id: "D1", supply: defaultValue(20), sellingPrice: defaultValue(10) },
+        { id: "D2", supply: defaultValue(30), sellingPrice: defaultValue(12) },
     ]);
 
     const [customers, setCustomers] = useState<Customer[]>([
-        { id: "O1", demand: -1, buyingPrice: -1 },
-        { id: "O2", demand: -1, buyingPrice: -1 },
-        { id: "O3", demand: -1, buyingPrice: -1 },
+        { id: "O1", demand: defaultValue(10), buyingPrice: defaultValue(30) },
+        { id: "O2", demand: defaultValue(28), buyingPrice: defaultValue(25) },
+        { id: "O3", demand: defaultValue(27), buyingPrice: defaultValue(30) },
     ]);
 
     const [unitCosts, setUnitCosts] = useState<UnitCostsMatrix>({
-        D1: { O1: -1, O2: -1, O3: -1 },
-        D2: { O1: -1, O2: -1, O3: -1 },
+        D1: { O1: defaultValue(8), O2: defaultValue(14), O3: defaultValue(17) },
+        D2: { O1: defaultValue(12), O2: defaultValue(9), O3: defaultValue(19) },
     });
 
     const [selectedCustomer, setSelectedCustomer] = useState<string | null>(

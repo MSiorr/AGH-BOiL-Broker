@@ -6,6 +6,8 @@ import type { FormData } from "./types";
 import ResponseView from "./components/Response/respone-view";
 import {ZZT, type ZZTResult} from "@/lib/zzt.ts";
 
+export const testData = false;
+
 function App() {
     const [result, setResult] = useState<ZZTResult | undefined>(undefined);
 
