@@ -35,11 +35,11 @@ export default function CustomersHeader({
                             <div className="text-center flex flex-col w-fit items-center gap-y-2 mx-auto">
                                 <span>Popyt</span>
                                 <FormInput
-                                    value={customer.buyingPrice}
+                                    value={customer.demand}
                                     onChange={(value) =>
                                         handleCustomerChange(
                                             customer.id,
-                                            "buyingPrice",
+                                            "demand",
                                             value
                                         )
                                     }
@@ -49,11 +49,11 @@ export default function CustomersHeader({
                             <div className="text-center flex flex-col items-center w-fit gap-y-2 mx-auto">
                                 <span>Cena</span>
                                 <FormInput
-                                    value={customer.demand}
+                                    value={customer.buyingPrice}
                                     onChange={(value) =>
                                         handleCustomerChange(
                                             customer.id,
-                                            "demand",
+                                            "buyingPrice",
                                             value
                                         )
                                     }
