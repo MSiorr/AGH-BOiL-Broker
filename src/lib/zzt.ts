@@ -79,8 +79,8 @@ export const ZZT = (formData: FormData): ZZTResult => {
     }
 
     // Set contracts based on clientDemandFulfillment
-    const supplierContracts = new Array<number>(suppliers.length).fill(clientDemandFulfillment ? 1 : 0);
-    const sellerContracts = new Array<number>(customers.length).fill(0);
+    const supplierContracts = new Array<number>(suppliers.length).fill(0);
+    const sellerContracts = customers.map((customer) => clientDemandFulfillment == customer.id ? 1 : 0);
 
     // Calculate detailed revenue
     let detailedRevenue: number[][] = [];
