@@ -13,7 +13,7 @@ import {
     SelectValue,
 } from "../ui/select";
 import { Label } from "../ui/label";
-import {testData} from "@/App.tsx";
+import { testData, testValueId } from "@/App.tsx";
 
 type LogisticFormProps = {
     onSubmit?: (data: {
@@ -24,24 +24,148 @@ type LogisticFormProps = {
     }) => void;
 };
 
-const defaultValue = (testValue: number) => testData ? testValue : -1;
+const testValues = [
+    {
+        data: {
+            suppliers: [
+                { id: "D1", supply: 20, sellingPrice: 10 },
+                { id: "D2", supply: 30, sellingPrice: 12 },
+            ],
+            customers: [
+                { id: "O1", demand: 10, buyingPrice: 30 },
+                { id: "O2", demand: 28, buyingPrice: 25 },
+                { id: "O3", demand: 27, buyingPrice: 30 },
+            ],
+            unitCosts: {
+                D1: { O1: 8, O2: 14, O3: 17 },
+                D2: { O1: 12, O2: 9, O3: 19 },
+            },
+        },
+    },
+    {
+        data: {
+            suppliers: [
+                { id: "D1", supply: 45, sellingPrice: 6 },
+                { id: "D2", supply: 25, sellingPrice: 7 },
+            ],
+            customers: [
+                { id: "O1", demand: 30, buyingPrice: 12 },
+                { id: "O2", demand: 30, buyingPrice: 13 },
+            ],
+            unitCosts: {
+                D1: { O1: 7, O2: 4 },
+                D2: { O1: 3, O2: 5 },
+            },
+        },
+    },
+    {
+        data: {
+            suppliers: [
+                { id: "D1", supply: 20, sellingPrice: 7 },
+                { id: "D2", supply: 40, sellingPrice: 8 },
+            ],
+            customers: [
+                { id: "O1", demand: 16, buyingPrice: 18 },
+                { id: "O2", demand: 12, buyingPrice: 16 },
+                { id: "O3", demand: 24, buyingPrice: 15 },
+            ],
+            unitCosts: {
+                D1: { O1: 4, O2: 7, O3: 2 },
+                D2: { O1: 8, O2: 10, O3: 4 },
+            },
+        },
+    },
+    {
+        data: {
+            suppliers: [
+                { id: "D1", supply: 20, sellingPrice: 6 },
+                { id: "D2", supply: 30, sellingPrice: 9 },
+            ],
+            customers: [
+                { id: "O1", demand: 18, buyingPrice: 15 },
+                { id: "O2", demand: 32, buyingPrice: 14 },
+                { id: "O3", demand: 20, buyingPrice: 16 },
+            ],
+            unitCosts: {
+                D1: { O1: 5, O2: 3, O3: 8 },
+                D2: { O1: 9, O2: 2, O3: 4 },
+            },
+        },
+    },
+];
+
+const defaultValue = (testValue: number) => (testData ? testValue : -1);
 
 export default function LogisticsForm({ onSubmit }: LogisticFormProps) {
-    const [suppliers, setSuppliers] = useState<Supplier[]>([
-        { id: "D1", supply: defaultValue(20), sellingPrice: defaultValue(10) },
-        { id: "D2", supply: defaultValue(30), sellingPrice: defaultValue(12) },
-    ]);
+    const [suppliers, setSuppliers] = useState<Supplier[]>(
+        testData
+            ? testValues[testValueId].data.suppliers
+            : [
+                  {
+                      id: "D1",
+                      supply: defaultValue(20),
+                      sellingPrice: defaultValue(10),
+                  },
+                  {
+                      id: "D2",
+                      supply: defaultValue(30),
+                      sellingPrice: defaultValue(12),
+                  },
+              ]
+    );
 
-    const [customers, setCustomers] = useState<Customer[]>([
-        { id: "O1", demand: defaultValue(10), buyingPrice: defaultValue(30) },
-        { id: "O2", demand: defaultValue(28), buyingPrice: defaultValue(25) },
-        { id: "O3", demand: defaultValue(27), buyingPrice: defaultValue(30) },
-    ]);
+    const [customers, setCustomers] = useState<Customer[]>(
+        testData
+            ? testValues[testValueId].data.customers
+            : [
+                  {
+                      id: "O1",
+                      demand: defaultValue(10),
+                      buyingPrice: defaultValue(30),
+                  },
+                  {
+                      id: "O2",
+                      demand: defaultValue(28),
+                      buyingPrice: defaultValue(25),
+                  },
+                  {
+                      id: "O3",
+                      demand: defaultValue(27),
+                      buyingPrice: defaultValue(30),
+                  },
+              ]
+    );
 
-    const [unitCosts, setUnitCosts] = useState<UnitCostsMatrix>({
-        D1: { O1: defaultValue(8), O2: defaultValue(14), O3: defaultValue(17) },
-        D2: { O1: defaultValue(12), O2: defaultValue(9), O3: defaultValue(19) },
-    });
+    const [unitCosts, setUnitCosts] = useState<UnitCostsMatrix>(
+        testData
+            ? () => {
+                  const base = testValues[testValueId].data.unitCosts;
+                  const allCustomers = testValues[
+                      testValueId
+                  ].data.customers.map((c) => c.id);
+                  const fixed: UnitCostsMatrix = {};
+                  Object.entries(base).forEach(([supplierId, costs]) => {
+                      fixed[supplierId] = {};
+                      allCustomers.forEach((cid) => {
+                          fixed[supplierId][cid] =
+                              costs[cid] !== undefined ? costs[cid] : -1;
+                      });
+                  });
+                  return fixed;
+              }
+            : {
+                  D1: {
+                      O1: defaultValue(8),
+                      O2: defaultValue(14),
+                      O3: defaultValue(17),
+                  },
+                  D2: {
+                      O1: defaultValue(12),
+                      O2: defaultValue(9),
+                      O3: defaultValue(19),
+                  },
+              }
+    );
 
     const [selectedCustomer, setSelectedCustomer] = useState<string | null>(
         null
@@ -159,22 +283,14 @@ export default function LogisticsForm({ onSubmit }: LogisticFormProps) {
     const validateInputs = () => {
         const isValid =
             suppliers.every((supplier) => {
-                return (
-                    supplier.supply >= 0 &&
-                    supplier.sellingPrice >= 0
-                );
+                return supplier.supply >= 0 && supplier.sellingPrice >= 0;
             }) &&
             customers.every((customer) => {
-                return (
-                    customer.demand >= 0 &&
-                    customer.buyingPrice >= 0
-                );
+                return customer.demand >= 0 && customer.buyingPrice >= 0;
             }) &&
             Object.values(unitCosts).every((costRow) => {
                 return Object.values(costRow).every((cost) => {
-                    return (
-                        cost >= 0
-                    );
+                    return cost >= 0;
                 });
             });
 

@@ -4,9 +4,10 @@ import LogisticsForm from "./components/LogisticForm/logistics-form";
 import { ThemeProvider } from "./components/theme-provider";
 import type { FormData } from "./types";
 import ResponseView from "./components/Response/respone-view";
-import {ZZT, type ZZTResult} from "@/lib/zzt.ts";
+import { ZZT, type ZZTResult } from "@/lib/zzt.ts";
 
-export const testData = false;
+export const testData = true;
+export const testValueId = 0;
 
 function App() {
     const [result, setResult] = useState<ZZTResult | undefined>(undefined);

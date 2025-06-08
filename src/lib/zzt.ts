@@ -1,4 +1,27 @@
-import type {FormData} from "@/types";
+import type { FormData } from "@/types";
+
+export type detailedRevenue = number[][];
+export type optimalPlan = {
+    mapSize: {
+        x: number;
+        y: number;
+    };
+    withFakes: boolean;
+    plan: (number | null)[][];
+};
+export type deltaResults = {
+    mapSize: {
+        x: number;
+        y: number;
+    };
+    withFakes: boolean;
+    deltas: [number, number, number][];
+};
+
+export type HistoryItem = {
+    name: "revenue" | "optimalPlan" | "deltaResults";
+    data: detailedRevenue | optimalPlan | deltaResults;
+};
 
 export type ZZTResult = {
     planData: (number | string)[][];
@@ -11,9 +34,13 @@ export type ZZTResult = {
     purchaseCostTotal: number;
     transportCostTotal: number;
     hasSimilarAltSolution: boolean;
-}
+    history?: HistoryItem[];
+};
 
-const findCycle = (basis: [number, number][], start: [number, number]): [number, number][] | null => {
+const findCycle = (
+    basis: [number, number][],
+    start: [number, number]
+): [number, number][] | null => {
     const basisPlus = [...basis, start];
     const rows: { [key: number]: [number, number][] } = {};
     const columns: { [key: number]: [number, number][] } = {};
@@ -25,7 +52,11 @@ const findCycle = (basis: [number, number][], start: [number, number]): [number,
         columns[j].push([i, j]);
     }
 
-    function dfs(path: [number, number][], visited: Set<string>, level: number = 0): [number, number][] | null {
+    function dfs(
+        path: [number, number][],
+        visited: Set<string>,
+        level: number = 0
+    ): [number, number][] | null {
         const last = path[path.length - 1];
         const [rowIdx, colIdx] = last;
 
@@ -38,7 +69,8 @@ const findCycle = (basis: [number, number][], start: [number, number]): [number,
             return path;
         }
 
-        const neighbors = level % 2 === 0 ? (rows[rowIdx] || []) : (columns[colIdx] || []);
+        const neighbors =
+            level % 2 === 0 ? rows[rowIdx] || [] : columns[colIdx] || [];
 
         for (const [i, j] of neighbors) {
             if (i === start[0] && j === start[1] && path.length >= 4) {
@@ -56,16 +88,19 @@ const findCycle = (basis: [number, number][], start: [number, number]): [number,
     }
 
     return dfs([start], new Set([`${start[0]},${start[1]}`]));
-}
+};
 
 export const ZZT = (formData: FormData): ZZTResult => {
-    const { suppliers, customers, unitCosts, clientDemandFulfillment } = formData;
+    const history: HistoryItem[] = [];
+
+    const { suppliers, customers, unitCosts, clientDemandFulfillment } =
+        formData;
 
     // Extract arrays from input data
-    const supply = suppliers.map(s => s.supply);
-    const demand = customers.map(c => c.demand);
-    const purchaseCost = suppliers.map(s => s.sellingPrice);
-    const sellPrice = customers.map(c => c.buyingPrice);
+    const supply = suppliers.map((s) => s.supply);
+    const demand = customers.map((c) => c.demand);
+    const purchaseCost = suppliers.map((s) => s.sellingPrice);
+    const sellPrice = customers.map((c) => c.buyingPrice);
 
     // Build unit transport costs matrix
     const unitTransportCosts: number[][] = [];
@@ -79,7 +114,9 @@ export const ZZT = (formData: FormData): ZZTResult => {
     }
 
     // Set contracts based on clientDemandFulfillment
-    const supplierContracts = new Array<number>(suppliers.length).fill(clientDemandFulfillment ? 1 : 0);
+    const supplierContracts = new Array<number>(suppliers.length).fill(
+        clientDemandFulfillment ? 1 : 0
+    );
     const sellerContracts = new Array<number>(customers.length).fill(0);
 
     // Calculate detailed revenue
@@ -87,9 +124,16 @@ export const ZZT = (formData: FormData): ZZTResult => {
     for (let i = 0; i < purchaseCost.length; i++) {
         detailedRevenue[i] = [];
         for (let j = 0; j < sellPrice.length; j++) {
-            detailedRevenue[i][j] = sellPrice[j] - purchaseCost[i] - unitTransportCosts[i][j];
+            detailedRevenue[i][j] =
+                sellPrice[j] - purchaseCost[i] - unitTransportCosts[i][j];
         }
     }
+
+    // TODO print
+    history.push({
+        name: "revenue",
+        data: detailedRevenue.map((row) => [...row]),
+    });
 
     const originalRows = detailedRevenue.length;
     const originalCols = detailedRevenue[0].length;
@@ -103,7 +147,7 @@ export const ZZT = (formData: FormData): ZZTResult => {
     let currentSupplierContracts = [...supplierContracts];
     let currentPurchaseCost = [...purchaseCost];
     let currentSellPrice = [...sellPrice];
-    let currentUnitTransportCosts = unitTransportCosts.map(row => [...row]);
+    let currentUnitTransportCosts = unitTransportCosts.map((row) => [...row]);
 
     if (supplySum !== demandSum) {
         currentSellerContracts = [...currentSellerContracts, 0];
@@ -129,7 +173,9 @@ export const ZZT = (formData: FormData): ZZTResult => {
         currentPurchaseCost = [...currentPurchaseCost, 0];
         currentSellPrice = [...currentSellPrice, 0];
 
-        const newTransportCosts: number[][] = Array(currentUnitTransportCosts.length + 1)
+        const newTransportCosts: number[][] = Array(
+            currentUnitTransportCosts.length + 1
+        )
             .fill(null)
             .map(() => Array(currentUnitTransportCosts[0].length + 1).fill(0));
 
@@ -143,18 +189,24 @@ export const ZZT = (formData: FormData): ZZTResult => {
         const blockVal = Math.max(...currentUnitTransportCosts.flat()) * 100000;
 
         for (let j = 0; j < detailedRevenue[0].length; j++) {
-            detailedRevenue[detailedRevenue.length - 1][j] -= blockVal * currentSellerContracts[j];
-            currentUnitTransportCosts[currentUnitTransportCosts.length - 1][j] += blockVal * currentSellerContracts[j];
+            detailedRevenue[detailedRevenue.length - 1][j] -=
+                blockVal * currentSellerContracts[j];
+            currentUnitTransportCosts[currentUnitTransportCosts.length - 1][
+                j
+            ] += blockVal * currentSellerContracts[j];
         }
 
         for (let i = 0; i < detailedRevenue.length; i++) {
-            detailedRevenue[i][detailedRevenue[0].length - 1] -= blockVal * currentSupplierContracts[i];
-            currentUnitTransportCosts[i][currentUnitTransportCosts[0].length - 1] += blockVal * currentSupplierContracts[i];
+            detailedRevenue[i][detailedRevenue[0].length - 1] -=
+                blockVal * currentSupplierContracts[i];
+            currentUnitTransportCosts[i][
+                currentUnitTransportCosts[0].length - 1
+            ] += blockVal * currentSupplierContracts[i];
         }
     }
 
     // Initial plan
-    const dtRevCopy = detailedRevenue.map(row => [...row]);
+    const dtRevCopy = detailedRevenue.map((row) => [...row]);
     const maxValue = Math.max(...dtRevCopy.flat()) + 1;
 
     for (let j = 0; j < dtRevCopy[0].length; j++) {
@@ -188,13 +240,30 @@ export const ZZT = (formData: FormData): ZZTResult => {
         }
     }
 
+    // TODO print
+    history.push({
+        name: "optimalPlan",
+        data: {
+            mapSize: {
+                x: currentDemand.length,
+                y: currentSupply.length,
+            },
+            withFakes: currentSellerContracts.length > originalCols,
+            plan: optimalPlan.map((row) => [...row]),
+        },
+    });
+
     // Optimization loop
     let deltaResults: [number, number, number][] = [];
     let maxDelta: [number, number, number] = [0, 0, 0];
 
     while (true) {
-        const alpha: (number | null)[] = Array(detailedRevenue.length).fill(null);
-        const beta: (number | null)[] = Array(detailedRevenue[0].length).fill(null);
+        const alpha: (number | null)[] = Array(detailedRevenue.length).fill(
+            null
+        );
+        const beta: (number | null)[] = Array(detailedRevenue[0].length).fill(
+            null
+        );
         alpha[alpha.length - 1] = 0;
 
         while (true) {
@@ -218,12 +287,29 @@ export const ZZT = (formData: FormData): ZZTResult => {
         deltaResults = [];
         for (let i = 0; i < detailedRevenue.length; i++) {
             for (let j = 0; j < detailedRevenue[0].length; j++) {
-                if (optimalPlan[i][j] === null && alpha[i] !== null && beta[j] !== null) {
+                if (
+                    optimalPlan[i][j] === null &&
+                    alpha[i] !== null &&
+                    beta[j] !== null
+                ) {
                     const delta = detailedRevenue[i][j] - alpha[i]! - beta[j]!;
                     deltaResults.push([i, j, delta]);
                 }
             }
         }
+
+        //TODO print
+        history.push({
+            name: "deltaResults",
+            data: {
+                mapSize: {
+                    x: currentDemand.length,
+                    y: currentSupply.length,
+                },
+                withFakes: currentSellerContracts.length > originalCols,
+                deltas: deltaResults.map((item) => [...item]),
+            },
+        });
 
         maxDelta = deltaResults.reduce(
             (max, current) => (current[2] > max[2] ? current : max),
@@ -246,7 +332,9 @@ export const ZZT = (formData: FormData): ZZTResult => {
             }
 
             const oddIndices = cycle.filter((_, idx) => idx % 2 === 1);
-            const minQty = Math.min(...oddIndices.map(([i, j]) => optimalPlan[i][j] || 0));
+            const minQty = Math.min(
+                ...oddIndices.map(([i, j]) => optimalPlan[i][j] || 0)
+            );
 
             for (let idx = 1; idx < cycle.length; idx += 2) {
                 const [i, j] = cycle[idx];
@@ -261,6 +349,19 @@ export const ZZT = (formData: FormData): ZZTResult => {
                 optimalPlan[i][j]! += minQty;
                 if (optimalPlan[i][j] === 0) optimalPlan[i][j] = null;
             }
+
+            //TODO print
+            history.push({
+                name: "optimalPlan",
+                data: {
+                    mapSize: {
+                        x: currentDemand.length,
+                        y: currentSupply.length,
+                    },
+                    withFakes: currentSellerContracts.length > originalCols,
+                    plan: optimalPlan.map((row) => [...row]),
+                },
+            });
         } else {
             break;
         }
@@ -294,11 +395,11 @@ export const ZZT = (formData: FormData): ZZTResult => {
         .fill(null)
         .map((_, j) => (j < originalCols ? customers[j].id : "OF"));
 
-    const planData: (number | string)[][] = optimalPlan.map(row =>
-        row.map(val => (val === null || val === 0 ? "-" : val))
+    const planData: (number | string)[][] = optimalPlan.map((row) =>
+        row.map((val) => (val === null || val === 0 ? "-" : val))
     );
 
-    const zData: (number | string)[][] = detailedRevenue.map(row => [...row]);
+    const zData: (number | string)[][] = detailedRevenue.map((row) => [...row]);
     for (let j = 0; j < currentSellerContracts.length; j++) {
         if (currentSellerContracts[j] === 1) {
             zData[zData.length - 1][j] = "-M";
@@ -311,7 +412,8 @@ export const ZZT = (formData: FormData): ZZTResult => {
     }
 
     const deltaReadable = deltaResults.map(
-        ([i, j, delta]) => `${rowLabels[i]} -> ${colLabels[j]} Δ = ${delta.toFixed(2)}`
+        ([i, j, delta]) =>
+            `${rowLabels[i]} -> ${colLabels[j]} Δ = ${delta.toFixed(2)}`
     );
 
     const hasSimilarAltSolution = maxDelta[2] === 0;
@@ -327,5 +429,6 @@ export const ZZT = (formData: FormData): ZZTResult => {
         purchaseCostTotal,
         transportCostTotal,
         hasSimilarAltSolution,
+        history: history.length > 0 ? history : undefined,
     };
-}
+};
