@@ -22,5 +22,5 @@ export type FormData = {
     suppliers: Supplier[];
     customers: Customer[];
     unitCosts: UnitCostsMatrix;
-    clientDemandFulfillment?: string | null; // Wypełnienie popytu klienta
+    clientDemandFulfillment: string | null; // Wypełnienie popytu klienta
 };

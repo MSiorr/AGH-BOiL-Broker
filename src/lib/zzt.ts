@@ -114,10 +114,10 @@ export const ZZT = (formData: FormData): ZZTResult => {
     }
 
     // Set contracts based on clientDemandFulfillment
-    const supplierContracts = new Array<number>(suppliers.length).fill(
-        clientDemandFulfillment ? 1 : 0
+    const supplierContracts = new Array<number>(suppliers.length).fill(0);
+    const sellerContracts = customers.map((customer) =>
+        clientDemandFulfillment == customer.id ? 1 : 0
     );
-    const sellerContracts = new Array<number>(customers.length).fill(0);
 
     // Calculate detailed revenue
     let detailedRevenue: number[][] = [];
@@ -223,13 +223,30 @@ export const ZZT = (formData: FormData): ZZTResult => {
     const supplyLeft = [...currentSupply];
     const demandLeft = [...currentDemand];
 
-    const flatIndices: { value: number; i: number; j: number }[] = [];
+    const flatIndices: {
+        value: number;
+        i: number;
+        j: number;
+        priority: number;
+    }[] = [];
     for (let i = 0; i < dtRevCopy.length; i++) {
         for (let j = 0; j < dtRevCopy[0].length; j++) {
-            flatIndices.push({ value: dtRevCopy[i][j], i, j });
+            let priority = 0;
+            // Higher priority (lower number) for real supplier-customer pairs
+            if (i < originalRows && j < originalCols) priority = 0; // Real-Real
+            else if (i < originalRows || j < originalCols)
+                priority = 1; // Real-Fake or Fake-Real
+            else priority = 2; // Fake-Fake
+
+            flatIndices.push({ value: dtRevCopy[i][j], i, j, priority });
         }
     }
-    flatIndices.sort((a, b) => b.value - a.value);
+
+    // Sort by priority first, then by value
+    flatIndices.sort((a, b) => {
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        return b.value - a.value;
+    });
 
     for (const { i, j } of flatIndices) {
         if (supplyLeft[i] > 0 && demandLeft[j] > 0) {
@@ -298,7 +315,32 @@ export const ZZT = (formData: FormData): ZZTResult => {
             }
         }
 
-        //TODO print
+        // Prioritize real suppliers/customers when selecting max delta
+        deltaResults.sort((a, b) => {
+            const [i1, j1, delta1] = a;
+            const [i2, j2, delta2] = b;
+
+            // If deltas are similar, prioritize real suppliers/customers
+            const priority1 =
+                i1 < originalRows && j1 < originalCols
+                    ? 0
+                    : i1 < originalRows || j1 < originalCols
+                    ? 1
+                    : 2;
+            const priority2 =
+                i2 < originalRows && j2 < originalCols
+                    ? 0
+                    : i2 < originalRows || j2 < originalCols
+                    ? 1
+                    : 2;
+
+            if (priority1 !== priority2) return delta2 - delta1;
+            return priority1 - priority2;
+        });
+
+        maxDelta =
+            deltaResults.length > 0 ? deltaResults[0] : [0, 0, -Infinity];
+
         history.push({
             name: "deltaResults",
             data: {
@@ -310,11 +352,6 @@ export const ZZT = (formData: FormData): ZZTResult => {
                 deltas: deltaResults.map((item) => [...item]),
             },
         });
-
-        maxDelta = deltaResults.reduce(
-            (max, current) => (current[2] > max[2] ? current : max),
-            [0, 0, -Infinity]
-        );
 
         if (maxDelta[2] > 0) {
             const basis: [number, number][] = [];
