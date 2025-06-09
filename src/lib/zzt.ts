@@ -274,6 +274,7 @@ export const ZZT = (formData: FormData): ZZTResult => {
     let deltaResults: [number, number, number][] = [];
     let maxDelta: [number, number, number] = [0, 0, 0];
 
+    let first = true;
     while (true) {
         const alpha: (number | null)[] = Array(detailedRevenue.length).fill(
             null
@@ -334,7 +335,7 @@ export const ZZT = (formData: FormData): ZZTResult => {
                     ? 1
                     : 2;
 
-            if (priority1 !== priority2) return delta2 - delta1;
+            if (!first || priority1 !== priority2) return delta2 - delta1;
             return priority1 - priority2;
         });
 
@@ -402,6 +403,7 @@ export const ZZT = (formData: FormData): ZZTResult => {
         } else {
             break;
         }
+        first = false;
     }
 
     // Calculate totals
